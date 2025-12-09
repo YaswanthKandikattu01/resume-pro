@@ -331,6 +331,25 @@ const App: React.FC = () => {
     }
   };
 
+  const handleSkipRating = async () => {
+      // Save details even if skipped, with 0 stars to indicate skipping
+      if (supabase) {
+          try {
+              const { error } = await supabase.from('ratings').insert([{
+                candidate_name: analysis?.candidateProfile?.name || "Anonymous",
+                candidate_email: analysis?.candidateProfile?.email || "No Email",
+                stars: 0, // 0 indicates skipped
+                resume_score: analysis?.score || 0
+              }]);
+              
+              if (error) console.error("Supabase error on skip:", error);
+          } catch (error) {
+              console.error("Supabase error on skip:", error);
+          }
+      }
+      setShowRating(false);
+  };
+
   // --- Helper for Job Split ---
   const linkedinNaukriJobs = jobs.filter(j => 
     j.source.toLowerCase().includes('linkedin') || j.source.toLowerCase().includes('naukri')
@@ -782,12 +801,6 @@ const App: React.FC = () => {
                                 ))}
                             </div>
 
-                            <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-3 text-left mb-6 border border-slate-100 dark:border-slate-700">
-                                <div className="text-[10px] font-bold text-slate-400 uppercase">Details (Auto-Extracted)</div>
-                                <div className="font-bold text-slate-800 dark:text-white text-sm">{analysis.candidateProfile?.name || "Anonymous"}</div>
-                                <div className="text-slate-500 dark:text-slate-400 text-xs">{analysis.candidateProfile?.email || "No Email"}</div>
-                            </div>
-
                             <button 
                                 onClick={submitRating}
                                 className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition"
@@ -795,7 +808,7 @@ const App: React.FC = () => {
                                 Submit
                             </button>
                             <button 
-                                onClick={() => setShowRating(false)}
+                                onClick={handleSkipRating}
                                 className="mt-4 text-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
                             >
                                 Skip
