@@ -161,13 +161,14 @@ const App: React.FC = () => {
         
         CRITICAL INSTRUCTIONS:
         1. **SCORE**: Provide a GENUINE score (0-100) based strictly on the match between resume skills/experience and the job description/role. Do not inflate the score. If it's a mismatch, give a low score.
-        2. **EXPERIENCE**: Extract the candidate's total years of experience or seniority level (e.g., "Senior (5+ years)", "Mid-Level", "Entry Level").
-        3. **PROJECTS**: Suggest 3 specific, impressive projects the candidate could build to improve their profile for this specific role.
-        4. **ROADMAP**: Create a "Personalized Study Roadmap" with 3 steps (Basics, Intermediate, Advanced) to bridge the skill gap.
-        5. **COLD EMAIL**: Generate a professional cold email subject and body to send to a recruiter for this role.
-        6. **COVER LETTER**: Write a highly professional, tailored cover letter (250-350 words) for this specific role and company (if known). Use a standard business letter format.
-        7. **INTERVIEW**: Provide 5 likely interview questions, 3 weak areas to prep for, and a mock interview focus.
-        8. **CANDIDATE INFO**: Extract Name and Email.
+        2. **EXPERIENCE CALCULATION**: CAREFULLY calculate the total years of experience by summing the duration of all listed roles in the Work Experience section. Count from the start date of the first relevant role to the current date. Do NOT just look for a number in the summary. If they have a role from 2021 to Present, that is 2+ years. Be accurate.
+        3. **EXECUTIVE SUMMARY**: Write a professional executive summary (3-4 sentences) that specifically mentions the calculated years of experience (e.g. "Professional with 2+ years of experience in..."). It must be factually correct based on the work history.
+        4. **PROJECTS**: Suggest 3 specific, impressive projects the candidate could build to improve their profile for this specific role.
+        5. **ROADMAP**: Create a "Personalized Study Roadmap" with 3 steps (Basics, Intermediate, Advanced) to bridge the skill gap.
+        6. **COLD EMAIL**: Generate a professional cold email subject and body to send to a recruiter for this role.
+        7. **COVER LETTER**: Write a highly professional, tailored cover letter (250-350 words) for this specific role and company (if known). Use a standard business letter format.
+        8. **INTERVIEW**: Provide 5 likely interview questions, 3 weak areas to prep for, and a mock interview focus.
+        9. **CANDIDATE INFO**: Extract Name and Email.
 
         Return JSON matching this schema:
         {
