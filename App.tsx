@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import { createClient } from '@supabase/supabase-js';
 import { AnalysisResult, Job, Rating } from './types';
@@ -7,8 +8,6 @@ import { AnalysisResult, Job, Rating } from './types';
 // -------------------------------------------------------------------------
 // Configuration for API Key and Supabase
 // -------------------------------------------------------------------------
-// Fix: Use process.env instead of import.meta.env as per SDK guidelines and to avoid ImportMeta type errors.
-// Supabase Client Initialization
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = (supabaseUrl && supabaseKey) ? createClient(supabaseUrl, supabaseKey) : null;
@@ -20,7 +19,8 @@ const StarIcon: React.FC<{ filled: boolean; onClick?: () => void }> = ({ filled,
 
 const Icons = {
   Upload: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>,
-  Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+  Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+  CheckCircle: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#4F46E5" className="text-white"><path fill="none" d="M0 0h24v24H0z"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>,
   X: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500"><circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/></svg>,
   Star: StarIcon,
   Briefcase: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>,
@@ -35,7 +35,11 @@ const Icons = {
   Sun: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>,
   Moon: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>,
   Linkedin: () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-[#0077b5]"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>,
-  Globe: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+  Globe: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+  Code: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600 dark:text-purple-400"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>,
+  Alert: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-500"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>,
+  Help: () => <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>,
+  ChevronRight: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
 };
 
 const App: React.FC = () => {
@@ -72,7 +76,7 @@ const App: React.FC = () => {
   // Data
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [loadingMsg, setLoadingMsg] = useState('');
+  const [loadingStep, setLoadingStep] = useState(0); // 0 to 4
   const [copied, setCopied] = useState(false);
   const [coverLetterCopied, setCoverLetterCopied] = useState(false);
   
@@ -126,13 +130,17 @@ const App: React.FC = () => {
     }
 
     if (!process.env.API_KEY) {
-      // Fix: Update alert to reflect environment variable name change
       alert("API Key is missing! Please configure API_KEY in your environment variables.");
       return;
     }
 
     setView('analyzing');
-    setLoadingMsg('Scanning document structure...');
+    setLoadingStep(0);
+
+    // Simulate loading steps visually
+    const stepInterval = setInterval(() => {
+        setLoadingStep(prev => (prev < 3 ? prev + 1 : prev));
+    }, 2500);
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -157,18 +165,18 @@ const App: React.FC = () => {
       parts.push({ text: jobContext });
 
       const prompt = `
-        You are an advanced ATS (Applicant Tracking System). Analyze the resume against the target job description and role.
+        You are an advanced ATS (Applicant Tracking System) and Career Coach. Analyze the resume against the target job description.
         
-        CRITICAL INSTRUCTIONS:
-        1. **SCORE**: Provide a GENUINE score (0-100) based strictly on the match between resume skills/experience and the job description/role. Do not inflate the score. If it's a mismatch, give a low score.
-        2. **EXPERIENCE CALCULATION**: CAREFULLY calculate the total years of experience by summing the duration of all listed roles in the Work Experience section. Count from the start date of the first relevant role to the current date. Do NOT just look for a number in the summary. If they have a role from 2021 to Present, that is 2+ years. Be accurate.
-        3. **EXECUTIVE SUMMARY**: Write a professional executive summary (3-4 sentences) that specifically mentions the calculated years of experience (e.g. "Professional with 2+ years of experience in..."). It must be factually correct based on the work history.
-        4. **PROJECTS**: Suggest 3 specific, impressive projects the candidate could build to improve their profile for this specific role.
-        5. **ROADMAP**: Create a "Personalized Study Roadmap" with 3 steps (Basics, Intermediate, Advanced) to bridge the skill gap.
-        6. **COLD EMAIL**: Generate a professional cold email subject and body to send to a recruiter for this role.
-        7. **COVER LETTER**: Write a highly professional, tailored cover letter (250-350 words) for this specific role and company (if known). Use a standard business letter format.
-        8. **INTERVIEW**: Provide 5 likely interview questions, 3 weak areas to prep for, and a mock interview focus.
-        9. **CANDIDATE INFO**: Extract Name and Email.
+        CRITICAL TASKS:
+        1. **SCORE**: Provide a GENUINE score (0-100).
+        2. **EXPERIENCE**: Calculate total years.
+        3. **EXECUTIVE SUMMARY**: Write a professional summary.
+        4. **PROJECTS**: Suggest 3 specific projects.
+        5. **ROADMAP**: Create a 3-step study roadmap.
+        6. **COLD EMAIL & COVER LETTER**: Generate professional drafts.
+        7. **INTERVIEW**: Provide questions and weak areas.
+        8. **REPETITION ANALYSIS**: Identify 3-5 overused words (verbs/adjectives) and provide better synonyms.
+        9. **SPELLING & GRAMMAR**: List actual spelling or grammar errors found in the text.
 
         Return JSON matching this schema:
         {
@@ -189,7 +197,9 @@ const App: React.FC = () => {
              "weakAreas": ["string"],
              "mockFocus": "string"
           },
-          "candidateProfile": { "name": "string", "email": "string" }
+          "candidateProfile": { "name": "string", "email": "string" },
+          "repetitionAnalysis": [{ "word": "string", "count": number, "suggestion": "string" }],
+          "spellingErrors": [{ "word": "string", "correction": "string", "context": "string" }]
         }
       `;
       
@@ -200,7 +210,7 @@ const App: React.FC = () => {
         contents: { parts },
         config: {
           responseMimeType: 'application/json',
-          temperature: 0, // Deterministic scoring
+          temperature: 0,
         }
       });
 
@@ -208,12 +218,10 @@ const App: React.FC = () => {
       setAnalysis(result);
 
       // --- Job Search ---
-      setLoadingMsg('Searching for relevant opportunities...');
+      // We keep the job search logic but don't block the UI update too long if possible
+      // For this demo, we await it, but in production, we might parallelize.
       
       const searchRole = jobRole || result.jobTitles[0] || "Software Engineer";
-      
-      // FIX: Relaxed query. Removed exact experience string which kills matches.
-      // Removed "site:glassdoor.com" temporarily to make room for stronger LinkedIn/Naukri results.
       const searchQuery = `(site:linkedin.com/jobs OR site:naukri.com OR site:indeed.com) "${searchRole}" ${result.topSkills.slice(0,2).join(" ")}`;
 
       const searchResponse = await ai.models.generateContent({
@@ -243,7 +251,6 @@ const App: React.FC = () => {
              } catch (e) {}
           }
           
-          // FIX: Clean source for better filtering (remove www.)
           const rawSource = new URL(chunk.web.uri).hostname;
           const cleanSource = rawSource.replace('www.', '').replace('in.', '').replace('uk.', '');
 
@@ -256,13 +263,17 @@ const App: React.FC = () => {
         }
       });
 
-      setJobs(uniqueJobs.slice(0, 20)); // Limit to 20
-      setView('results');
+      setJobs(uniqueJobs.slice(0, 20)); 
       
-      // Show rating modal after 15s
+      clearInterval(stepInterval);
+      setLoadingStep(4); // Done
+      // Small delay to show the final checked state
+      setTimeout(() => setView('results'), 500);
+      
       setTimeout(() => setShowRating(true), 15000);
 
     } catch (error) {
+      clearInterval(stepInterval);
       console.error(error);
       alert("Analysis failed. Please check your API Key or try again.");
       setView('input');
@@ -305,52 +316,36 @@ const App: React.FC = () => {
 
     try {
         if (supabase) {
-            const { error } = await supabase.from('ratings').insert([{
+            await supabase.from('ratings').insert([{
               candidate_name: analysis?.candidateProfile?.name || "Anonymous",
               candidate_email: analysis?.candidateProfile?.email || "No Email",
               stars: ratingStars,
               resume_score: analysis?.score || 0
             }]);
-
-            if (error) {
-              console.error("Supabase error:", error);
-            } else {
-              console.log("Rating submitted to Supabase successfully.");
-            }
-        } else {
-             console.log("Supabase not configured. Rating:", ratingStars);
         }
-        
         setRatingSubmitted(true);
         setTimeout(() => setShowRating(false), 2000);
     } catch (error) {
         console.error("Submission error:", error);
-        // Even if it fails, close the modal so user isn't stuck
         setRatingSubmitted(true);
         setTimeout(() => setShowRating(false), 2000);
     }
   };
 
   const handleSkipRating = async () => {
-      // Save details even if skipped, with 0 stars to indicate skipping
       if (supabase) {
           try {
-              const { error } = await supabase.from('ratings').insert([{
+              await supabase.from('ratings').insert([{
                 candidate_name: analysis?.candidateProfile?.name || "Anonymous",
                 candidate_email: analysis?.candidateProfile?.email || "No Email",
-                stars: 0, // 0 indicates skipped
+                stars: 0,
                 resume_score: analysis?.score || 0
               }]);
-              
-              if (error) console.error("Supabase error on skip:", error);
-          } catch (error) {
-              console.error("Supabase error on skip:", error);
-          }
+          } catch (error) {}
       }
       setShowRating(false);
   };
 
-  // --- Helper for Job Split ---
   const linkedinNaukriJobs = jobs.filter(j => 
     j.source.toLowerCase().includes('linkedin') || j.source.toLowerCase().includes('naukri')
   );
@@ -386,7 +381,6 @@ const App: React.FC = () => {
           </button>
         </header>
 
-        {/* Fix: Remove justify-center to allow natural scrolling for long content */}
         <main className="flex-grow flex flex-col items-center text-center px-4 mt-10 md:mt-20">
           <div className="inline-block bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-full text-sm font-semibold mb-6 animate-fade-in border border-blue-200 dark:border-blue-800">
             New: Agentic AI Analysis
@@ -461,11 +455,53 @@ const App: React.FC = () => {
   }
 
   if (view === 'analyzing') {
+    const loadingSteps = [
+        "Parsing your resume",
+        "Analyzing your skills",
+        "Generating interview questions"
+    ];
+
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col items-center justify-center p-4 font-sans transition-colors duration-300">
-        <div className="w-16 h-16 border-4 border-blue-200 dark:border-blue-900 border-t-blue-600 dark:border-t-blue-500 rounded-full animate-spin mb-6"></div>
-        <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Analyzing Resume...</h2>
-        <p className="text-slate-500 dark:text-slate-400 animate-pulse">{loadingMsg}</p>
+        <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl max-w-md w-full border border-slate-100 dark:border-slate-700">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 text-center">Analyzing...</h2>
+            
+            <div className="space-y-6">
+                {loadingSteps.map((step, index) => (
+                    <div key={index} className="flex items-center gap-4">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-500 ${
+                            loadingStep > index 
+                                ? 'bg-blue-600 scale-100' 
+                                : loadingStep === index 
+                                    ? 'bg-blue-100 dark:bg-blue-900/50 animate-pulse' 
+                                    : 'bg-slate-100 dark:bg-slate-700'
+                        }`}>
+                            {loadingStep > index ? (
+                                <Icons.CheckCircle />
+                            ) : loadingStep === index ? (
+                                <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                                <div className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600"></div>
+                            )}
+                        </div>
+                        <span className={`font-medium transition-colors duration-300 ${
+                            loadingStep >= index 
+                                ? 'text-slate-800 dark:text-white' 
+                                : 'text-slate-400 dark:text-slate-500'
+                        }`}>
+                            {step}
+                        </span>
+                    </div>
+                ))}
+            </div>
+            
+            <div className="mt-8 h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div 
+                    className="h-full bg-blue-600 transition-all duration-500 ease-out"
+                    style={{ width: `${(loadingStep / 3) * 100}%` }}
+                ></div>
+            </div>
+        </div>
       </div>
     );
   }
@@ -597,11 +633,44 @@ const App: React.FC = () => {
                   <div className="space-y-2 text-sm text-slate-900 dark:text-slate-100">
                      <div className="flex items-center gap-2"><Icons.UserCheck /> <span className="font-medium">{analysis.candidateProfile?.name || "Detected Name"}</span></div>
                      <div className="flex items-center gap-2"><Icons.Mail /> <span className="text-slate-500 dark:text-slate-400">{analysis.candidateProfile?.email || "Detected Email"}</span></div>
-                     <div className="mt-3 pt-3 border-t border-slate-50 dark:border-slate-700">
-                        <span className="text-xs text-slate-400">Experience Level:</span>
-                        <div className="font-bold text-slate-700 dark:text-slate-200">{analysis.experienceLevel}</div>
-                     </div>
+                     {/* Removed Experience Level as requested */}
                   </div>
+               </div>
+               
+               {/* Language Audit (Repetition & Spelling) */}
+               <div className="bg-white dark:bg-slate-800 rounded-2xl shadow p-6 border border-slate-100 dark:border-slate-700 transition-colors">
+                 <h3 className="font-bold text-sm text-slate-400 uppercase mb-3 flex items-center gap-2"><Icons.Alert /> Language Audit</h3>
+                 
+                 {analysis.spellingErrors?.length > 0 ? (
+                    <div className="mb-4">
+                        <div className="text-red-500 text-xs font-bold uppercase mb-1">Spelling / Grammar</div>
+                        <div className="space-y-2">
+                            {analysis.spellingErrors.map((err, i) => (
+                                <div key={i} className="text-xs bg-red-50 dark:bg-red-900/20 p-2 rounded">
+                                    <span className="line-through text-slate-400">{err.word}</span> <span className="text-red-600 dark:text-red-400 font-bold">→ {err.correction}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                 ) : (
+                    <div className="text-xs text-green-600 dark:text-green-400 mb-4 flex items-center gap-1">
+                        <Icons.Check /> No spelling errors detected.
+                    </div>
+                 )}
+
+                 {analysis.repetitionAnalysis?.length > 0 && (
+                     <div>
+                        <div className="text-amber-500 text-xs font-bold uppercase mb-1">Repetitive Words</div>
+                        <div className="space-y-2">
+                             {analysis.repetitionAnalysis.map((item, i) => (
+                                 <div key={i} className="text-xs">
+                                     <span className="font-medium text-slate-700 dark:text-slate-300">"{item.word}"</span> <span className="text-slate-400">({item.count}x)</span>
+                                     <div className="text-slate-500 dark:text-slate-400 italic">Try: {item.suggestion}</div>
+                                 </div>
+                             ))}
+                        </div>
+                     </div>
+                 )}
                </div>
 
                {/* Interview Prep */}

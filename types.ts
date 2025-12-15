@@ -24,6 +24,18 @@ export interface InterviewPrep {
   mockFocus: string;
 }
 
+export interface RepetitionItem {
+  word: string;
+  count: number;
+  suggestion: string;
+}
+
+export interface SpellingItem {
+  word: string;
+  correction: string;
+  context: string;
+}
+
 export interface AnalysisResult {
   score: number;
   summary: string;
@@ -38,10 +50,13 @@ export interface AnalysisResult {
     subject: string;
     body: string;
   };
-  coverLetter: string; // Added for Cover Letter Feature
+  coverLetter: string;
   roadmap: RoadmapStep[]; 
   interviewPrep: InterviewPrep; 
   candidateProfile: CandidateProfile;
+  // New Features
+  repetitionAnalysis: RepetitionItem[];
+  spellingErrors: SpellingItem[];
 }
 
 export interface Rating {
